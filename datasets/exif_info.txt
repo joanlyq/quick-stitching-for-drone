@@ -1,0 +1,6 @@
+SourceFile,FileName,GPSLatitude,GPSLongitude,FlightYawDegree,FlightPitchDegree,FlightRollDegree,RelativeAltitude,FOV
+/Users/yli/GeoNadir/mosaic/overlay_drone_footprint/datasets/images/DJI_0001.JPG,DJI_0001.JPG,"14 deg 28' 23.76"" S","145 deg 28' 55.76"" E",-90.00,+5.10,+0.00,+19.40,73.7 deg
+/Users/yli/GeoNadir/mosaic/overlay_drone_footprint/datasets/images/DJI_0002.JPG,DJI_0002.JPG,"14 deg 28' 23.74"" S","145 deg 28' 55.38"" E",-89.80,-18.50,-0.60,+19.90,73.7 deg
+/Users/yli/GeoNadir/mosaic/overlay_drone_footprint/datasets/images/DJI_0003.JPG,DJI_0003.JPG,"14 deg 28' 23.74"" S","145 deg 28' 54.49"" E",-90.00,-7.40,-1.10,+19.90,73.7 deg
+/Users/yli/GeoNadir/mosaic/overlay_drone_footprint/datasets/images/DJI_0004.JPG,DJI_0004.JPG,"14 deg 28' 23.74"" S","145 deg 28' 53.88"" E",-89.90,-7.50,-1.10,+19.90,73.7 deg
+/Users/yli/GeoNadir/mosaic/overlay_drone_footprint/datasets/images/DJI_0005.JPG,DJI_0005.JPG,"14 deg 28' 23.74"" S","145 deg 28' 53.28"" E",-89.80,-9.10,-1.10,+19.90,73.7 deg

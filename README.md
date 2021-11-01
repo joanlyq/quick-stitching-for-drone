@@ -4,3 +4,5 @@ A small project aims to georeference drone images and overlay them together with
 So far the tool involves [GDAL](https://gdal.org/) and [numpy](https://numpy.org/). The output is a merged tiff with all drone images after being georeferenced. Individual georeferenced drone images are also part of the output.
 
 The next step is to speed up the whole process (skip the producing individual georeferenced images, and parallel the tiff merging steps if possible).  
+
+This project is inspired by [alexhagiopol.orthomosaic](https://github.com/alexhagiopol/orthomosaic)

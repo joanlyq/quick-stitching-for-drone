@@ -1,10 +1,13 @@
 import utilities as util
 import mosaic as mosaic
 import geometry as gm
-import os
+# import os
+from pathlib import Path
 import numpy as np
 import subprocess
 import argparse
+from PIL import Image
+from PIL.ExifTags import TAGS
 
 #dataDIR = "/Users/yli/GeoNadir/mosaic/overlay_drone_footprint/datasets"
 
@@ -19,23 +22,26 @@ def parse_args():
 if __name__ == '__main__':
     # Parse command line arguments
     (DATA_DIR,CRS) = parse_args()
-    exif_dir="{}/exif_info.txt".format(DATA_DIR)
-    output_dir="{}/outputs".format(DATA_DIR)
+    exif_dir=Path(DATA_DIR)/"exif_info.txt"
+    print(type(DATA_DIR))
+    print(exif_dir.exists())
+    img_dir=Path(DATA_DIR)/"images"
+    output_dir=Path(DATA_DIR)/"outputs"
     
-    #fileName = "/Users/yli/GeoNadir/mosaic/overlay_drone_footprint/datasets/imageData.txt"
-    if os.path.exists(exif_dir):
+    #fileName = Path("/Users/yli/GeoNadir/mosaic/overlay_drone_footprint/datasets/imageData.txt")
+    if exif_dir.exists():
         exif_output=open(exif_dir).readlines()
-        if len(exif_output) == len(os.listdir("{}/images/".format(DATA_DIR))):
+        if len(exif_output) == len(os.listdir(img_dir)):
             print("read exif_info.txt")
         else: 
-            bashcmd = ["exiftool -csv -filename -gpslatitude -gpslongitude -FlightYawDegree -FlightPitchDegree -FlightRollDegree -relativeAltitude -fov {}/images/*.JPG > {}".format(DATA_DIR, exif_dir)]
+            bashcmd = ["exiftool(-k).exe -csv -filename -gpslatitude -gpslongitude -FlightYawDegree -FlightPitchDegree -FlightRollDegree -relativeAltitude -fov {}*.JPG > {}".format(img_dir, exif_dir)]
             process = subprocess.Popen(bashcmd, stdout=subprocess.PIPE,shell=True)
             output, error = process.communicate()
             exif_output=open(exif_dir).readlines()
             # exif_output=output.decode("utf-8").splitlines()
             print("finish extracting exif info")
     else: 
-        bashcmd = ["exiftool -csv -filename -gpslatitude -gpslongitude -FlightYawDegree -FlightPitchDegree -FlightRollDegree -relativeAltitude -fov {}/images/*.JPG > {}".format(DATA_DIR, exif_dir)]
+        bashcmd = ["exiftool(-k).exe -csv -filename -gpslatitude -gpslongitude -FlightYawDegree -FlightPitchDegree -FlightRollDegree -relativeAltitude -fov {}*.JPG > {}".format(img_dir, exif_dir)]
         process = subprocess.Popen(bashcmd, stdout=subprocess.PIPE,shell=True)
         output, error = process.communicate()
         exif_output=open(exif_dir).readlines()

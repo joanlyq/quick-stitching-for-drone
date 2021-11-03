@@ -87,7 +87,8 @@ class Combiner:
         # Check: https://gdal.org/drivers/raster/gtiff.html#creation-options
         input_jpgs=" ".join(self.fileDIRMatrix)
         input_tiffs=input_jpgs.replace('.JPG','.tif').replace("images","outputs")
-        gdal_merge=["gdal_merge.py -of GTiff -co BIGTIFF=IF_NEEDED -co COMPRESS=JPEG -co TILED=YES -co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -o {}/merged.tif {}".format(dataDIR,input_tiffs)]
+        merge_tiff_dir=dataDIR/"merged.tif"
+        gdal_merge=["gdal_merge.py -of GTiff -co BIGTIFF=IF_NEEDED -co COMPRESS=JPEG -co TILED=YES -co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -o {} {}".format(merge_tiff_dir,input_tiffs)]
         process=subprocess.Popen(gdal_merge, stdout=subprocess.PIPE,shell=True)
         output, error = process.communicate()
         output=output.decode(encoding='UTF-8')
@@ -95,7 +96,7 @@ class Combiner:
             print("Successfully merged all tiffs")
         else:
             print("Merge failed, try again")
-        create_overview=["gdaladdo -r nearest {}/merged.tif".format(dataDIR)]
+        create_overview=["gdaladdo -r nearest {}".format(merge_tiff_dir)]
         process=subprocess.Popen(create_overview, stdout=subprocess.PIPE,shell=True)
         output, error = process.communicate()
         output=output.decode(encoding='UTF-8')

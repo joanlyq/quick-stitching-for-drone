@@ -18,7 +18,7 @@ def importData(exif_info):
     '''
 
     allImages = [] #list of cv::Mat aimghes
-    dataMatrix = np.genfromtxt(exif_info,delimiter=",", usecols=range(1,9),skip_header=1,dtype=str)
+    dataMatrix = np.array(exif_info)
     '''createDateMatrix = np.genfromtxt(fileName,delimiter=",",usecols=[8],skip_header=1,dtype=str)
     createTime=[]
     for i in range(0,createDateMatrix.shape[0]):
@@ -28,8 +28,8 @@ def importData(exif_info):
     # obtain ave altitude in meter and FOV in decimal degree
     # check new drone for FOV and HFOV
     # FOV, HFOV DJI P4P explanation https://phantompilots.com/threads/p4p-lens-field-of-view.114160/
-    fileDIRMatrix = np.genfromtxt(exif_info,delimiter=",",usecols=[0], skip_header=1, dtype=str) #read filen name strings
-    return fileDIRMatrix, dataMatrix
+    #fileDIRMatrix = np.genfromtxt(exif_info,delimiter=",",usecols=[0], skip_header=1, dtype=str) #read filen name strings
+    return dataMatrix
 
 def display(title, image):
     '''

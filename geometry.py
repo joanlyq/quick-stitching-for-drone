@@ -12,9 +12,9 @@ def computeUnRotMatrix(pose):
     :param pose: A 1x6 NumPy ndArray containing pose information in [img_fname,GPS_lat,GPS_lon,Y,P,R,relativeAltitude,FOV] format
     :return: A 3x3 rotation matrix that removes perspective distortion from the image to which it is applied.
     '''
-    a = float(pose[3])*np.pi/180 #alpha
-    b = float(pose[4])*np.pi/180 #beta
-    g = float(pose[5])*np.pi/180 #gamma
+    a = float(pose[0])*np.pi/180 #alpha
+    b = float(pose[1])*np.pi/180 #beta
+    g = float(pose[2])*np.pi/180 #gamma
     #Compute R matrix according to source.
     Rz = np.array(([m.cos(a), -1*m.sin(a),    0],
                    [m.sin(a),    m.cos(a),    0],

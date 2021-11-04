@@ -3,6 +3,7 @@ import cv2
 import utilities as util
 import geometry as gm
 from pyproj import Proj
+from pathlib import Path
 import subprocess
 try:
     from osgeo import gdal
@@ -12,7 +13,7 @@ import utm
 
 
 class Combiner:
-    def __init__(self,fileDIRMatrix_,dataMatrix_,CRS_):
+    def __init__(self,dataMatrix_,CRS_):
         '''
         :param imageList_: List of all images DIR in dataset.
         :param dataMatrix_: Matrix with all pose data in dataset.
@@ -21,18 +22,19 @@ class Combiner:
         self.imageList = []
         self.tiffList=[]
         self.dataMatrix = dataMatrix_
-        self.fileDIRMatrix=fileDIRMatrix_
+        #self.fileDIRMatrix=fileDIRMatrix_
         self.CRS=CRS_
-        for i in range(0,len(self.fileDIRMatrix)):
-            newImageName=self.fileDIRMatrix[i].replace('.JPG','.tif').replace("images","outputs")
+        for i in range(0,len(self.dataMatrix)):
+            newImageName=self.dataMatrix[i][0].replace('.JPG','.tif').replace("images","outputs")
             self.tiffList.append(newImageName)
-            newtfwName=self.fileDIRMatrix[i].replace('.JPG','.tfw').replace("images","outputs")
+            newtfwName=self.dataMatrix[i][0].replace('.JPG','.tfw').replace("images","outputs")
             if os.path.exists(newImageName) and os.path.exists(newtfwName):
                     print("tiff generated from {} exists, skip georeferencing and creating twf file".format(self.dataMatrix[i][0]))
             else:
-                image = (cv2.imread(self.fileDIRMatrix[i]))  #no downsample
+                image = (cv2.imread(self.dataMatrix[i][0]))  #no downsample
                 #image = imageList_[i][::2,::2,:] #downsample the image to speed things up. 4000x3000 is huge!
-                M = gm.computeUnRotMatrix(self.dataMatrix[i,:])
+                poses=[float(pose) for pose in self.dataMatrix[i][6:9]]
+                M = gm.computeUnRotMatrix(poses)
                 #Perform a perspective transformation based on pose information.
                 #Ideally, this will mnake each image look as if it's viewed from the top.
                 #We assume the ground plane is perfectly flat.
@@ -52,7 +54,7 @@ class Combiner:
                 else:
                     print("Oops, there's something wrong with add projection to tiff")
                 #georeference tiff by creating .twf
-                lat_dms=self.dataMatrix[i][1]
+                '''lat_dms=self.dataMatrix[i][1]
                 lat_dms = lat_dms.replace("'",'').replace('"','').split(' ')
                 if lat_dms[4]=="N":
                     lat_dd = util.dms_to_dd(lat_dms)
@@ -63,9 +65,11 @@ class Combiner:
                 if lon_dms[4]=="E":
                     lon_dd = util.dms_to_dd(lon_dms)
                 else:
-                    lon_dd = -util.dms_to_dd(lon_dms)
+                    lon_dd = -util.dms_to_dd(lon_dms)'''
                 #print(lat_dd,lon_dd)
                 #myProj = Proj("+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+                lat_dd=float(self.dataMatrix[i][3])
+                lon_dd=float(self.dataMatrix[i][5])
                 UTMx, UTMy, zone,letter=utm.from_latlon(lat_dd,lon_dd)
                 #myProj = Proj("+proj=utm +zone={} +zone_letter={} +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs".format(zone,letter))
                 #UTMx, UTMy = myProj(lon_dd, lat_dd)
@@ -73,7 +77,7 @@ class Combiner:
                 relativeAltitude= float(self.dataMatrix[i][-2])
                 img_width = image.shape[1]
                 gsd = gm.get_gsd(fov_dd, relativeAltitude, img_width)
-                refractive_index=1
+                refractive_index=1.33
                 tfw=(str(gsd*refractive_index)+'\n0.0000000000\n0.0000000000\n-'+str(gsd*refractive_index)+'\n'+str(UTMx)+'\n'+str(UTMy))
                 file=open(newtfwName,'w')
                 file.write(str(tfw)) 
@@ -85,9 +89,9 @@ class Combiner:
         # merge all raster tiffs into one with different compression settings. 
         # Check: https://gis.stackexchange.com/questions/1104/should-gdal-be-set-to-produce-geotiff-files-with-compression-which-algorithm-sh 
         # Check: https://gdal.org/drivers/raster/gtiff.html#creation-options
-        input_jpgs=" ".join(self.fileDIRMatrix)
-        input_tiffs=input_jpgs.replace('.JPG','.tif').replace("images","outputs")
-        merge_tiff_dir=dataDIR/"merged.tif"
+        input_jpgs=self.dataMatrix[:,0]
+        input_tiffs=' '.join([input_jpg.replace('.JPG','.tif').replace("images","outputs") for input_jpg in input_jpgs])
+        merge_tiff_dir=Path(dataDIR)/"merged.tif"
         gdal_merge=["gdal_merge.py -of GTiff -co BIGTIFF=IF_NEEDED -co COMPRESS=JPEG -co TILED=YES -co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -o {} {}".format(merge_tiff_dir,input_tiffs)]
         process=subprocess.Popen(gdal_merge, stdout=subprocess.PIPE,shell=True)
         output, error = process.communicate()

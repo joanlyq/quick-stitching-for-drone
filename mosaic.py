@@ -13,7 +13,7 @@ import utm
 
 
 class Combiner:
-    def __init__(self,dataMatrix_,CRS_):
+    def __init__(self,dataMatrix_,CRS_,refractiveIndex_):
         '''
         :param imageList_: List of all images DIR in dataset.
         :param dataMatrix_: Matrix with all pose data in dataset.
@@ -24,6 +24,7 @@ class Combiner:
         self.dataMatrix = dataMatrix_
         #self.fileDIRMatrix=fileDIRMatrix_
         self.CRS=CRS_
+        self.refractiveIndex=refractiveIndex_
         for i in range(0,len(self.dataMatrix)):
             newImageName=self.dataMatrix[i][0].replace('.JPG','.tif').replace("images","outputs")
             self.tiffList.append(newImageName)
@@ -77,8 +78,7 @@ class Combiner:
                 relativeAltitude= float(self.dataMatrix[i][-2])
                 img_width = image.shape[1]
                 gsd = gm.get_gsd(fov_dd, relativeAltitude, img_width)
-                refractive_index=1.33
-                tfw=(str(gsd*refractive_index)+'\n0.0000000000\n0.0000000000\n-'+str(gsd*refractive_index)+'\n'+str(UTMx)+'\n'+str(UTMy))
+                tfw=(str(gsd*self.refractiveIndex)+'\n0.0000000000\n0.0000000000\n-'+str(gsd*self.refractiveIndex)+'\n'+str(UTMx)+'\n'+str(UTMy))
                 file=open(newtfwName,'w')
                 file.write(str(tfw)) 
                 file.close()  

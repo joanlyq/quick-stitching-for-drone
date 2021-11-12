@@ -27,6 +27,7 @@ class Combiner:
         self.refractiveIndex=refractiveIndex_
         for i in range(0,len(self.dataMatrix)):
             newImageName=self.dataMatrix[i][0].replace('.JPG','.tif').replace("images","outputs")
+            tempImageName=self.dataMatrix[i][0].replace('.JPG','temp.tif').replace("images","outputs")
             self.tiffList.append(newImageName)
             newtfwName=self.dataMatrix[i][0].replace('.JPG','.tfw').replace("images","outputs")
             if os.path.exists(newImageName) and os.path.exists(newtfwName):
@@ -41,10 +42,10 @@ class Combiner:
                 #We assume the ground plane is perfectly flat.
                 correctedImage = gm.warpPerspectiveWithPadding(image,M)
                 #save corrected image as tiff
-                cv2.imwrite(newImageName,correctedImage)
+                cv2.imwrite(tempImageName,correctedImage)
                 #tifffile.imsave(newImageName, correctedImage)
                 #use gdal nearblack to remove black pixels
-                gdal.Nearblack(newImageName, newImageName, format="GTiff", creationOptions= ["compress=jpeg"], setAlpha=True)
+                gdal.Nearblack(newImageName, tempImageName, format="GTiff", creationOptions= ["compress=jpeg"], setAlpha=True)
                 #add projection spec to tiff, cmd: 
                 add_prj_spec=["gdal_edit.py -a_srs {} {}".format(self.CRS,newImageName)]
                 process = subprocess.Popen(add_prj_spec, stdout=subprocess.PIPE,shell=True)

@@ -6,3 +6,10 @@ So far the tool involves [GDAL](https://gdal.org/) and [numpy](https://numpy.org
 The next step is to speed up the whole process (skip the producing individual georeferenced images, and parallel the tiff merging steps if possible).  
 
 This project is inspired by [alexhagiopol.orthomosaic](https://github.com/alexhagiopol/orthomosaic)
+
+## Installation (Windows)
+1. Clone repository to your local directory: `git clone https://github.com/joanlyq/quick-stitching-for-drone.git`
+2. Create conda environment from yml file: `conda create -n environment.yml`
+3. Activate the conda environment: `conda activate geonadir`
+4. Install additional required dependencies with pip: `pip install -r requirements.txt`
+5. Finally, run the code: `python main.py`

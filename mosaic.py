@@ -47,8 +47,8 @@ class Combiner:
                 #use gdal nearblack to remove black pixels
                 gdal.Nearblack(newImageName, tempImageName, format="GTiff", creationOptions= ["compress=jpeg"], setAlpha=True)
                 #add projection spec to tiff, cmd: 
-                add_prj_spec=["gdal_edit.py -a_srs {} {}".format(self.CRS,newImageName)]
-                process = subprocess.Popen(add_prj_spec, stdout=subprocess.PIPE,shell=True)
+                add_prj_spec=["python", "%CONDA_PREFIX%/Scripts/gdal_edit.py", "-a_srs" , self.CRS, newImageName]
+                process = subprocess.Popen(add_prj_spec, stdout=subprocess.PIPE, shell=True)
                 output, error = process.communicate()
                 output=output.decode(encoding='UTF-8')
                 if output=='':
@@ -93,16 +93,16 @@ class Combiner:
         input_jpgs=self.dataMatrix[:,0]
         input_tiffs=' '.join([input_jpg.replace('.JPG','.tif').replace("images","outputs") for input_jpg in input_jpgs])
         merge_tiff_dir=Path(dataDIR)/"merged.tif"
-        gdal_merge=["gdal_merge.py -of GTiff -co BIGTIFF=IF_NEEDED -co COMPRESS=JPEG -co TILED=YES -co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -o {} {}".format(merge_tiff_dir,input_tiffs)]
-        process=subprocess.Popen(gdal_merge, stdout=subprocess.PIPE,shell=True)
+        gdal_merge="python %CONDA_PREFIX%/Scripts/gdal_merge.py -of GTiff -co BIGTIFF=IF_NEEDED -co COMPRESS=JPEG -co TILED=YES -co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -o {} {}".format(merge_tiff_dir,input_tiffs)
+        process=subprocess.Popen(gdal_merge.split(' '), stdout=subprocess.PIPE,shell=True)
         output, error = process.communicate()
         output=output.decode(encoding='UTF-8')
         if 'done' in output:
             print("Successfully merged all tiffs")
         else:
             print("Merge failed, try again")
-        create_overview=["gdaladdo -r nearest {}".format(merge_tiff_dir)]
-        process=subprocess.Popen(create_overview, stdout=subprocess.PIPE,shell=True)
+        create_overview="%CONDA_PREFIX%/Library/bin/gdaladdo -r nearest {}".format(merge_tiff_dir)
+        process=subprocess.Popen(create_overview.split(' '), stdout=subprocess.PIPE,shell=True)
         output, error = process.communicate()
         output=output.decode(encoding='UTF-8')
         if 'done' in output:

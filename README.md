@@ -13,5 +13,4 @@ This project is inspired by [alexhagiopol.orthomosaic](https://github.com/alexha
 2. Checkout the Windows branch: `git checkout windows`
 4. Create conda environment from yml file: `conda env create -f environment.yml`
 5. Activate the conda environment: `conda activate geonadir`
-6. Install additional required dependencies with pip: `pip install -r requirements.txt`
 7. Finally, run the code: `python main.py`

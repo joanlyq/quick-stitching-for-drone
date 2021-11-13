@@ -9,3 +9,5 @@ dependencies:
  - pyproj
  - exiftool
  - utm
+ - pip:
+    - pyexiftool

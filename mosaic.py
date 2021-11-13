@@ -10,10 +10,70 @@ try:
 except ImportError:
     import gdal
 import utm
+import threading
+
+class georeferenceImageThread (threading.Thread):
+    def __init__(self, threadID, name, i, dataMatrix, CRS, refractiveIndex):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.i = i
+        self.dataMatrix = dataMatrix
+        self.CRS = CRS
+        self.refractiveIndex = refractiveIndex
+
+    
+    def georeferenceImage(self):
+        newImageName=self.dataMatrix[0].replace('.JPG','.tif').replace("images","outputs")
+        tempImageName=self.dataMatrix[0].replace('.JPG','temp.tif').replace("images","outputs")
+        newtfwName=self.dataMatrix[0].replace('.JPG','.tfw').replace("images","outputs")
+        if os.path.exists(newImageName) and os.path.exists(newtfwName):
+            print("tiff generated from {} exists, skip georeferencing and creating twf file".format(self.dataMatrix[0]))
+        else:
+            image = (cv2.imread(self.dataMatrix[0]))  #no downsample
+            #image = imageList_[i][::2,::2,:] #downsample the image to speed things up. 4000x3000 is huge!
+            poses=[float(pose) for pose in self.dataMatrix[6:9]]
+            M = gm.computeUnRotMatrix(poses)
+            #Perform a perspective transformation based on pose information.
+            #Ideally, this will mnake each image look as if it's viewed from the top.
+            #We assume the ground plane is perfectly flat.
+            correctedImage = gm.warpPerspectiveWithPadding(image,M)
+            #save corrected image as tiff
+            cv2.imwrite(tempImageName,correctedImage)
+            #use gdal nearblack to remove black pixels
+            gdal.Nearblack(newImageName, tempImageName, format="GTiff", creationOptions= ["compress=jpeg"], setAlpha=True)
+            #add projection spec to tiff, cmd: 
+            add_prj_spec=["python", "%CONDA_PREFIX%/Scripts/gdal_edit.py", "-a_srs" , self.CRS, newImageName]
+            process = subprocess.Popen(add_prj_spec, stdout=subprocess.PIPE, shell=True)
+            output, error = process.communicate()
+            output=output.decode(encoding='UTF-8')
+            if output=='':
+                print("successfully add projection CRS: {} to {}".format(self.CRS,self.dataMatrix[0]))
+            else:
+                print("Oops, there's something wrong with add projection to tiff")
+            #georeference tiff by creating .twf
+            lat_dd=float(self.dataMatrix[3])
+            lon_dd=float(self.dataMatrix[5])
+            UTMx, UTMy, zone,letter=utm.from_latlon(lat_dd,lon_dd)
+            fov_dd = float(self.dataMatrix[-1].split(" ")[0])
+            relativeAltitude= float(self.dataMatrix[-2])
+            img_width = image.shape[1]
+            gsd = gm.get_gsd(fov_dd, relativeAltitude, img_width)
+            tfw=(str(gsd*self.refractiveIndex)+'\n0.0000000000\n0.0000000000\n-'+str(gsd*self.refractiveIndex)+'\n'+str(UTMx)+'\n'+str(UTMy))
+            file=open(newtfwName,'w')
+            file.write(str(tfw)) 
+            file.close()  
+            print('TFW file created for {}'.format(self.dataMatrix[0]))
+    
+    
+    def run(self):
+        print("\nStarting " + self.name + "\n")
+        self.georeferenceImage()
+        print("\nExiting " + self.name + "\n")
 
 
 class Combiner:
-    def __init__(self,dataMatrix_,CRS_,refractiveIndex_):
+    def __init__(self):
         '''
         :param imageList_: List of all images DIR in dataset.
         :param dataMatrix_: Matrix with all pose data in dataset.
@@ -21,70 +81,22 @@ class Combiner:
         '''
         self.imageList = []
         self.tiffList=[]
+
+    
+    def performGeoreference(self, dataMatrix_, CRS_, refractiveIndex_):
         self.dataMatrix = dataMatrix_
-        #self.fileDIRMatrix=fileDIRMatrix_
         self.CRS=CRS_
         self.refractiveIndex=refractiveIndex_
+        threads = []
         for i in range(0,len(self.dataMatrix)):
-            newImageName=self.dataMatrix[i][0].replace('.JPG','.tif').replace("images","outputs")
-            tempImageName=self.dataMatrix[i][0].replace('.JPG','temp.tif').replace("images","outputs")
-            self.tiffList.append(newImageName)
-            newtfwName=self.dataMatrix[i][0].replace('.JPG','.tfw').replace("images","outputs")
-            if os.path.exists(newImageName) and os.path.exists(newtfwName):
-                    print("tiff generated from {} exists, skip georeferencing and creating twf file".format(self.dataMatrix[i][0]))
-            else:
-                image = (cv2.imread(self.dataMatrix[i][0]))  #no downsample
-                #image = imageList_[i][::2,::2,:] #downsample the image to speed things up. 4000x3000 is huge!
-                poses=[float(pose) for pose in self.dataMatrix[i][6:9]]
-                M = gm.computeUnRotMatrix(poses)
-                #Perform a perspective transformation based on pose information.
-                #Ideally, this will mnake each image look as if it's viewed from the top.
-                #We assume the ground plane is perfectly flat.
-                correctedImage = gm.warpPerspectiveWithPadding(image,M)
-                #save corrected image as tiff
-                cv2.imwrite(tempImageName,correctedImage)
-                #tifffile.imsave(newImageName, correctedImage)
-                #use gdal nearblack to remove black pixels
-                gdal.Nearblack(newImageName, tempImageName, format="GTiff", creationOptions= ["compress=jpeg"], setAlpha=True)
-                #add projection spec to tiff, cmd: 
-                add_prj_spec=["python", "%CONDA_PREFIX%/Scripts/gdal_edit.py", "-a_srs" , self.CRS, newImageName]
-                process = subprocess.Popen(add_prj_spec, stdout=subprocess.PIPE, shell=True)
-                output, error = process.communicate()
-                output=output.decode(encoding='UTF-8')
-                if output=='':
-                    print("successfully add projection CRS: {} to {}".format(self.CRS,self.dataMatrix[i][0]))
-                else:
-                    print("Oops, there's something wrong with add projection to tiff")
-                #georeference tiff by creating .twf
-                '''lat_dms=self.dataMatrix[i][1]
-                lat_dms = lat_dms.replace("'",'').replace('"','').split(' ')
-                if lat_dms[4]=="N":
-                    lat_dd = util.dms_to_dd(lat_dms)
-                else:
-                    lat_dd = -util.dms_to_dd(lat_dms)
-                lon_dms=self.dataMatrix[i][2]
-                lon_dms = lon_dms.replace("'",'').replace('"','').split(' ')
-                if lon_dms[4]=="E":
-                    lon_dd = util.dms_to_dd(lon_dms)
-                else:
-                    lon_dd = -util.dms_to_dd(lon_dms)'''
-                #print(lat_dd,lon_dd)
-                #myProj = Proj("+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-                lat_dd=float(self.dataMatrix[i][3])
-                lon_dd=float(self.dataMatrix[i][5])
-                UTMx, UTMy, zone,letter=utm.from_latlon(lat_dd,lon_dd)
-                #myProj = Proj("+proj=utm +zone={} +zone_letter={} +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs".format(zone,letter))
-                #UTMx, UTMy = myProj(lon_dd, lat_dd)
-                fov_dd = float(self.dataMatrix[i][-1].split(" ")[0])
-                relativeAltitude= float(self.dataMatrix[i][-2])
-                img_width = image.shape[1]
-                gsd = gm.get_gsd(fov_dd, relativeAltitude, img_width)
-                tfw=(str(gsd*self.refractiveIndex)+'\n0.0000000000\n0.0000000000\n-'+str(gsd*self.refractiveIndex)+'\n'+str(UTMx)+'\n'+str(UTMy))
-                file=open(newtfwName,'w')
-                file.write(str(tfw)) 
-                file.close()  
-                print('TFW file created for {}'.format(self.dataMatrix[i][0]))
-
+            # Create and execute parallel thread for each image
+            thread = georeferenceImageThread(i, "Thread-{}".format(i), i, self.dataMatrix[i], self.CRS, self.refractiveIndex)
+            thread.start()
+            threads.append(thread)
+        
+        # Wait for all threads to complete
+        for t in threads:
+            t.join()
 
     def createMosaic(self,dataDIR):
         # merge all raster tiffs into one with different compression settings. 

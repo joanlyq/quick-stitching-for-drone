@@ -53,7 +53,8 @@ if __name__ == '__main__':
     #timing.log("extract exif", elapsed=time())
 
     dataMatrix = util.importData(exifMatrix)
-    myCombiner = mosaic.Combiner(dataMatrix, CRS, REFRACTIVEINDEX)
+    myCombiner = mosaic.Combiner()
+    myCombiner.performGeoreference(dataMatrix, CRS, REFRACTIVEINDEX)
     result = myCombiner.createMosaic(DATA_DIR)
     print("MOSAIC DONE!")
 

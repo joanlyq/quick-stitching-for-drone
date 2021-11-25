@@ -14,7 +14,7 @@ from time import time
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Mosaic drone images for without orthorectify')
-    parser.add_argument("--DATA_DIR", default='/Users/yli/GeoNadir/mosaic/quick-stitching-for-drone/datasets', help='Directory of images to be processed')
+    parser.add_argument("--DATA_DIR", default='./datasets', help='Directory of images to be processed')
     parser.add_argument("--CRS", default='EPSG:32755', help='coordinate reference system for quick display in qgis')
     parser.add_argument("--REFRACTIVEINDEX", default='1', help='coordinate reference system for quick display in qgis', type=float)
     args = parser.parse_args()
@@ -53,7 +53,8 @@ if __name__ == '__main__':
     #timing.log("extract exif", elapsed=time())
 
     dataMatrix = util.importData(exifMatrix)
-    myCombiner = mosaic.Combiner(dataMatrix, CRS, REFRACTIVEINDEX)
+    myCombiner = mosaic.Combiner()
+    myCombiner.performGeoreference(dataMatrix, CRS, REFRACTIVEINDEX)
     result = myCombiner.createMosaic(DATA_DIR)
     print("MOSAIC DONE!")
 

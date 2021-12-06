@@ -9,8 +9,8 @@ This project is inspired by [alexhagiopol.orthomosaic](https://github.com/alexha
 
 ## Installation (Windows)
 1. Clone repository to your local directory: `git clone https://github.com/joanlyq/quick-stitching-for-drone.git`
-3. Change directory to inside repo: `cd quick-stitching-for-drone/`
-2. Checkout the Windows branch: `git checkout windows`
+2. Change directory to inside repo: `cd quick-stitching-for-drone/`
+3. Checkout the Windows branch: `git checkout windows`
 4. Create conda environment from yml file: `conda env create -f environment.yml`
 5. Activate the conda environment: `conda activate geonadir`
 7. Finally, run the code: `python main.py`

@@ -56,5 +56,5 @@ if __name__ == '__main__':
     myCombiner = mosaic.Combiner()
     myCombiner.performGeoreference(dataMatrix, CRS, REFRACTIVEINDEX)
     result = myCombiner.createMosaic(DATA_DIR)
-    print("MOSAIC DONE!")
+    #print("MOSAIC DONE!")
 

@@ -26,7 +26,7 @@ class georeferenceImageThread (threading.Thread):
         newImageName=self.dataMatrix[0].replace('.JPG','.tif').replace("images","outputs")
         newtfwName=self.dataMatrix[0].replace('.JPG','.tfw').replace("images","outputs")
         if os.path.exists(newImageName) and os.path.exists(newtfwName):
-                print("tiff generated from {} exists, skip georeferencing and creating twf file".format(self.dataMatrix[i][0]))
+                print("tiff generated from {} exists, skip georeferencing and creating twf file".format(self.dataMatrix[0]))
         else:
             image = (cv2.imread(self.dataMatrix[0]))  #no downsample
             #image = imageList_[i][::2,::2,:] #downsample the image to speed things up. 4000x3000 is huge!
@@ -86,15 +86,28 @@ class Combiner:
         self.CRS=CRS_
         self.refractiveIndex=refractiveIndex_
         threads = []
-        for i in range(0,len(self.dataMatrix)):
+        chunk=10
+        length=len(self.dataMatrix)//chunk
+        j=0
+        for j in range(0,length):
             # Create and execute parallel thread for each image
-            thread = georeferenceImageThread(i, "Thread-{}".format(i), i, self.dataMatrix[i], self.CRS, self.refractiveIndex)
-            thread.start()
-            threads.append(thread)
-        
-        # Wait for all threads to complete
-        for t in threads:
-            t.join()
+            if (j+chunk)<len(self.dataMatrix):
+                for i in range(j*10,(j*10+chunk)):
+                    thread = georeferenceImageThread(i, "Thread-{}".format(i), i, self.dataMatrix[i], self.CRS, self.refractiveIndex)
+                    thread.start()
+                    threads.append(thread)
+                # Wait for all threads to complete
+                for t in threads:
+                    t.join()
+            else: 
+                for i in range(j*10,len(self.dataMatrix)):
+                    thread = georeferenceImageThread(i, "Thread-{}".format(i), i, self.dataMatrix[i], self.CRS, self.refractiveIndex)
+                    thread.start()
+                    threads.append(thread)
+                # Wait for all threads to complete
+                for t in threads:
+                    t.join()
+            j=j+1
 
     def createMosaic(self,dataDIR):
         # merge all raster tiffs into one with different compression settings. 

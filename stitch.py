@@ -9,11 +9,11 @@ import tifffile
 import requests
 
 # read image metadata, get roll, pitch, yaw, assuming all nadir, gps coordinate
-path = "/Users/yli/Desktop/map/Autel-20220521-FitzroyP3" #"/Users/yli/GeoNadir/mosaic/quick-stitching-for-drone/datasets/images" #
+path = "/tmp/odm/1997-b6717d8e-ab94-4f71-be76-39ec843c73c0" #"/Users/yli/GeoNadir/mosaic/quick-stitching-for-drone/datasets/images" #
 ## factor to resize images for quick processing
-resize = 8
+resize = 1
 factor = 1
-epsg = 32600
+epsg = 32755
 ## create list for metadata
 img_list = []
 gsd_h_list = []
@@ -23,8 +23,8 @@ x_list = []
 y_list = []
 ## extract essential metadata with dji and autel, could expand to other drone images depending on the metadata format
 for count, dir in tqdm(enumerate(sorted(glob.glob("{}/images/*.JPG".format(path))))):
-    with exiftool.ExifTool() as et:
-        metadata = et.get_metadata(dir)
+    with exiftool.ExifToolHelper() as et:
+        metadata = et.get_metadata(dir)[0]
         fn = metadata['File:FileName']
         if metadata['EXIF:Make'] == "DJI":
             gimbal_roll = float(metadata['XMP:GimbalRollDegree'])
@@ -241,8 +241,8 @@ for i in tqdm(img_list):
         angle = -yaw
     img = Image.open(dir).convert('RGBA')
     im_w, im_h = img.size
-    alpha = get_alpha(im_w, im_h)
-    img.putalpha(alpha)
+    # alpha = get_alpha(im_w, im_h)
+    # img.putalpha(alpha)
     hscale = gsd_h/ave_gsd_h
     vscale = gsd_v/ave_gsd_v
     img = img.resize((round(hscale*im_w),round(vscale*im_h)))
@@ -283,7 +283,7 @@ for i in tqdm(img_list):
     top_paper = round((ymax-y)/ave_gsd_v)
     new_im.paste(rotated_img,(left_paper,top_paper), rotated_img)
 
-new_im.show()
+# new_im.show()
 worldfile = open("{}output.tfw".format(path), "w")  
 worldfile.write(str(ave_gsd_h)+"\n")
 worldfile.write(str(0)+"\n") # generally = 0
@@ -303,7 +303,7 @@ except:
     print("failed to generate .prj file")
     pass
 
-new_im.save("{}output.tif".format(path), compression='lzw')
+new_im.save("{}-output.tif".format(path), compression='lzw')
 # tifffile.imsave('/Users/yli/GeoNadir/output2.tif', new_im, compression='LZW') 
 # rotate image and fill the rest with null or 0
 # copy paste on to a blank canvas

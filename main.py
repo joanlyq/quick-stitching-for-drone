@@ -35,14 +35,15 @@ if __name__ == '__main__':
     # directory already exists
         pass
 
-    tags= ["filename", "gpslatitude", "gpslongitude","FlightYawDegree", "FlightPitchDegree", "FlightRollDegree", "relativeAltitude", "fov"]
+    tags= ["file:filename", "composite:gpslatitude", "composite:gpslongitude","xmp:FlightYawDegree", "xmp:FlightPitchDegree", "xmp:FlightRollDegree", "xmp:relativeAltitude", "composite:fov"]
     #img_ls=[str(img) for img in img_dir.glob('*.JPG')]
     for img in sorted(img_dir.glob('*.JPG')):
-        with exiftool.ExifTool() as et:
+        with exiftool.ExifToolHelper() as et:
             exif_all=et.get_metadata(str(img))
-            exif_info = np.array(list(et.get_tags(tags,str(img)).values()))
+            exif_output = et.get_tags(img,tags)[0]
+            exif_info = np.array(list(exif_output.values()))
             exifMatrix.append(exif_info)
-                #exif_output = et.get_tags(tags,img)
+                
 
         '''bashcmd = ["exiftool -csv -filename -gpslatitude -gpslongitude -FlightYawDegree -FlightPitchDegree -FlightRollDegree -relativeAltitude -fov {} > {}".format(img_dir, exif_dir)]
         process = subprocess.Popen(bashcmd, stdout=subprocess.PIPE,shell=True)

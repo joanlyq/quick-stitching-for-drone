@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--DATA_DIR","/Users/yli/Desktop/p4p_arlington_220322_1030"]
+            "args": ["--DATA_DIR","/tmp/odm/1997-b6717d8e-ab94-4f71-be76-39ec843c73c0"]
         }
     ]
 }
